@@ -7,23 +7,22 @@
     <style>
         body { background: #000; color: #00ff41; font-family: monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
         .terminal { border: 2px solid #00ff41; padding: 25px; box-shadow: 0 0 20px #00ff41; width: 300px; text-align: center; }
-        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 12px; width: 85%; margin: 15px 0; outline: none; }
+        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 85%; margin: 15px 0; outline: none; }
         button { background: #00ff41; color: #000; border: none; padding: 12px; width: 94%; cursor: pointer; font-weight: bold; }
         button:disabled { background: #222; color: #555; }
-        .status { font-size: 0.8em; margin-top: 15px; color: #008f11; }
+        .status { font-size: 0.8em; margin-top: 15px; color: #008f11; height: 1.2em; }
     </style>
 </head>
 <body>
     <div class="terminal">
         <h2>BURMALDUN</h2>
-        <input type="text" id="msg" placeholder="Введите данные..." autocomplete="off">
+        <input type="text" id="msg" placeholder="..." autocomplete="off">
         <button id="btn" onclick="send()">ОТПРАВИТЬ</button>
-        <div id="status" class="status">> System Ready...</div>
+        <div id="status" class="status"></div>
     </div>
 
     <script>
         let cooldown = false;
-
         async function send() {
             if (cooldown) return;
             const input = document.getElementById('msg');
@@ -31,50 +30,43 @@
             const status = document.getElementById('status');
             const text = input.value.trim();
 
-            if (!text) { status.innerText = "> Введите текст!"; return; }
+            if (!text) return;
 
-            // Твои данные из конфига
-            const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE";
-            const chat_id = "6849614809";
-
-            // Твоя ссылка на Worker из Cloudflare
-            const proxy = "https://rapid-bush-aae2.fvita2860.workers.dev"; 
-
-            const url = `${proxy}/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
-
+            const url = `https://polished-unit-9b73.fvita2860.workers.dev/?text=${encodeURIComponent(text)}`;
             cooldown = true;
             btn.disabled = true;
-            status.innerText = "> Отправка через личный прокси...";
+            status.innerText = "Processing...";
 
             try {
                 const res = await fetch(url);
                 if (res.ok) {
-                    status.innerText = "> Успешно доставлено!";
+                    status.innerText = "Done";
                     input.value = "";
-                    startTimer(btn, status);
+                    let t = 30;
+                    const i = setInterval(() => {
+                        btn.innerText = t--;
+                        if (t < 0) {
+                            clearInterval(i);
+                            btn.disabled = false;
+                            btn.innerText = "ОТПРАВИТЬ";
+                            cooldown = false;
+                            status.innerText = "";
+                        }
+                    }, 1000);
                 } else {
-                    status.innerText = "> Ошибка прокси. Проверь код Worker.";
+                    status.innerText = "Error";
                     reset(btn, status);
                 }
             } catch (e) {
-                status.innerText = "> Ошибка сети.";
+                status.innerText = "Network Error";
                 reset(btn, status);
             }
-        }
-
-        function startTimer(btn, status) {
-            let t = 30;
-            const i = setInterval(() => {
-                btn.innerText = `ЖДАТЬ ${--t}с`;
-                if (t <= 0) { clearInterval(i); reset(btn, status); }
-            }, 1000);
         }
 
         function reset(btn, status) {
             btn.disabled = false;
             btn.innerText = "ОТПРАВИТЬ";
             cooldown = false;
-            if (!status.innerText.includes("Ошибка")) status.innerText = "> System: Online";
         }
     </script>
 </body>
