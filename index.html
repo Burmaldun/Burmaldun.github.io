@@ -1,54 +1,83 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Burmaldun | Terminal</title>
-    <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .terminal { background: rgba(0, 20, 0, 0.9); border: 1px solid #00ff41; padding: 30px; box-shadow: 0 0 20px #00ff41; text-align: center; width: 350px; }
-        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 80%; margin-bottom: 10px; outline: none; }
-        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
-        .logs { font-size: 0.8em; color: #888; margin-top: 15px; text-align: left; height: 50px; overflow: hidden; }
-    </style>
-</head>
-<body>
-    <div class="terminal">
-        <h1>BURMALDUN</h1>
-        <p>ВВЕДИТЕ СООБЩЕНИЕ:</p>
+<script>
+    // Используем sessionStorage, чтобы КД не сбрасывался даже при обычном обновлении страницы
+    let cooldownActive = false;
+
+    async function sendToTG() {
+        const btn = document.querySelector('button');
+        const logBox = document.getElementById('log_box');
+        const userInput = document.getElementById('user_msg');
         
-        <input type="text" id="user_msg" placeholder="Сообщение..." autocomplete="off">
-        <br>
-        <button onclick="sendToTG()">ОТПРАВИТЬ</button>
-
-        <div class="logs" id="log_box">> System ready...</div>
-    </div>
-
-    <script>
-        async function sendToTG() {
-            const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE"; // Твой токен
-            const chat_id = "6849614809"; // Твой ID
-            const text = document.getElementById('user_msg').value;
-            const logBox = document.getElementById('log_box');
-
-            if (!text) return;
-
-            logBox.innerText = "> Sending data...";
-
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
-
-            try {
-                const response = await fetch(url);
-                if (response.ok) {
-                    logBox.innerText = "> Сообщение доставлено!";
-                    document.getElementById('user_msg').value = "";
-                } else {
-                    logBox.innerText = "> Ошибка сервера.";
-                }
-            } catch (e) {
-                logBox.innerText = "> Ошибка сети.";
-            }
+        // 1. Жесткая проверка КД
+        if (cooldownActive || btn.disabled) {
+            console.log("Кулдаун еще активен");
+            return;
         }
-    </script>
-</body>
-</html>
+
+        const text = userInput.value.trim();
+        if (!text) {
+            logBox.innerText = "> Введите текст!";
+            return;
+        }
+
+        const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE"; 
+        const chat_id = "6849614809"; 
+        
+        // 2. Включаем блокировку СРАЗУ (до запроса)
+        cooldownActive = true;
+        btn.disabled = true;
+        btn.style.background = "#555";
+        btn.style.color = "#000";
+        btn.style.cursor = "not-allowed";
+        
+        logBox.innerText = "> Sending data...";
+
+        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                logBox.innerText = "> Доставлено! КД 30 сек...";
+                userInput.value = "";
+                startTimer(btn, logBox);
+            } else {
+                logBox.innerText = "> Ошибка API. Сброс...";
+                resetBtn(btn, logBox);
+            }
+        } catch (e) {
+            logBox.innerText = "> Ошибка сети. Сброс...";
+            resetBtn(btn, logBox);
+        }
+    }
+
+    function startTimer(btn, logBox) {
+        let timeLeft = 30;
+        btn.innerText = `ЖДАТЬ ${timeLeft}с`;
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                btn.innerText = `ЖДАТЬ ${timeLeft}с`;
+            } else {
+                clearInterval(timer);
+                resetBtn(btn, logBox);
+            }
+        }, 1000);
+    }
+
+    function resetBtn(btn, logBox) {
+        btn.disabled = false;
+        btn.innerText = "ОТПРАВИТЬ";
+        btn.style.background = "#00ff41";
+        btn.style.color = "#000";
+        btn.style.cursor = "pointer";
+        cooldownActive = false;
+        logBox.innerText = "> System ready...";
+    }
+
+    // Принудительный сброс кнопки при загрузке страницы (помогает на мобилах)
+    window.onload = () => {
+        const btn = document.querySelector('button');
+        const logBox = document.getElementById('log_box');
+        resetBtn(btn, logBox);
+    };
+</script>
