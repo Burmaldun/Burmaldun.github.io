@@ -46,44 +46,70 @@ export default {
 ВСЁ, у нас теперь есть рабочий код.
 И не забываем заменить строчку const worker = "https://ТВОЙ_ВОРКЕР.workers.dev"; где https://ТВОЙ_ВОРКЕР.workers.dev.
 
-HTML
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anon Chat</title>
+    <title>Burmaldun</title>
     <style>
-        body { background: #000; color: #00ff41; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .box { border: 1px solid #00ff41; padding: 25px; text-align: center; width: 300px; }
-        textarea { background: #000; border: 1px solid #00ff41; color: #00ff41; width: 90%; padding: 10px; margin-bottom: 10px; outline: none; }
-        button { background: #00ff41; color: #000; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+        body { background: #000; color: #00ff41; font-family: monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .box { border: 1px solid #00ff41; padding: 30px; width: 300px; text-align: center; }
+        textarea { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 90%; resize: none; outline: none; margin-bottom: 15px; }
+        button { background: #00ff41; color: #000; border: none; padding: 12px; width: 100%; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #222; color: #555; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>MESSAGE</h2>
-        <textarea id="t" rows="5" placeholder="..."></textarea>
-        <button onclick="send()" id="b">SEND</button>
+        <h2>Burmaldun</h2>
+        <textarea id="msg" rows="5" placeholder="..."></textarea>
+        <button id="btn" onclick="send()">ОТПРАВИТЬ</button>
     </div>
+
     <script>
+        let cooldown = false;
         async function send() {
-            const val = document.getElementById('t').value;
-            const btn = document.getElementById('b');
-            if(!val) return;
+            if (cooldown) return;
+            const input = document.getElementById('msg');
+            const btn = document.getElementById('btn');
+            const val = input.value.trim();
+
+            if (!val) return;
+
+            // ЗАМЕНИ НА СВОЮ ССЫЛКУ ИЗ CLOUDFLARE
+            const worker = "https://polished-unit-9b73.fvita2860.workers.dev"; 
             
+            cooldown = true;
             btn.disabled = true;
-            // ВСТАВЬ СВОЮ ССЫЛКУ ИЗ CLOUDFLARE НИЖЕ
-            const worker = "https://ТВОЙ_ВОРКЕР.workers.dev"; 
-            
+
             try {
-                await fetch(`${worker}/?text=${encodeURIComponent(val)}`);
-                document.getElementById('t').value = "";
-                alert("Sent!");
-            } catch {
-                alert("Error!");
+                const res = await fetch(`${worker}/?text=${encodeURIComponent(val)}`);
+                if (res.ok) {
+                    input.value = "";
+                    let t = 30;
+                    const i = setInterval(() => {
+                        btn.innerText = t--;
+                        if (t < 0) {
+                            clearInterval(i);
+                            btn.disabled = false;
+                            btn.innerText = "ОТПРАВИТЬ";
+                            cooldown = false;
+                        }
+                    }, 1000);
+                } else {
+                    reset();
+                }
+            } catch (e) {
+                reset();
             }
+        }
+
+        function reset() {
+            const btn = document.getElementById('btn');
             btn.disabled = false;
+            btn.innerText = "ОТПРАВИТЬ";
+            cooldown = false;
         }
     </script>
 </body>
