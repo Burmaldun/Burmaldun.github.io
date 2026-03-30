@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burmaldun Project</title>
+    <style>
+        body { 
+            background-color: #050505; 
+            color: #00ff41; 
+            font-family: 'Courier New', Courier, monospace; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .container { 
+            border: 1px solid #00ff41; 
+            padding: 30px; 
+            box-shadow: 0 0 15px #00ff41;
+            text-align: center;
+        }
+        .counter {
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: #ffffff;
+        }
+        h1 { text-transform: uppercase; letter-spacing: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Система Burmaldun</h1>
+        <p>Статус: [ONLINE]</p>
+        <div class="counter">Просмотров: <span id="count">...</span></div>
+    </div>
+
+    <script>
+        // Простой локальный счётчик для примера
+        let views = localStorage.getItem('page_views');
+        if (!views) {
+            views = 1;
+        } else {
+            views = parseInt(views) + 1;
+        }
+        localStorage.setItem('page_views', views);
+        document.getElementById('count').innerHTML = views;
+    </script>
+</body>
+</html>
