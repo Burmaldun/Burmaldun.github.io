@@ -3,22 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burmaldun | Terminal</title>
+    <title>Burmaldun | Анонимно</title>
     <style>
-        body { background: #000; color: #00ff41; font-family: monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .terminal { border: 2px solid #00ff41; padding: 25px; box-shadow: 0 0 20px #00ff41; width: 300px; text-align: center; }
-        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 85%; margin: 15px 0; outline: none; }
-        button { background: #00ff41; color: #000; border: none; padding: 12px; width: 94%; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #222; color: #555; }
-        .status { font-size: 0.8em; margin-top: 15px; color: #008f11; height: 1.2em; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .card { background: #1a1a1a; border: 1px solid #333; padding: 30px; border-radius: 20px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { margin: 0 0 10px; color: #00ff41; letter-spacing: 1px; }
+        p { color: #888; font-size: 0.9em; margin-bottom: 20px; }
+        textarea { background: #222; border: 1px solid #444; color: #fff; padding: 15px; width: 90%; border-radius: 12px; resize: none; outline: none; margin-bottom: 15px; font-family: inherit; }
+        button { background: #00ff41; color: #000; border: none; padding: 14px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
+        button:disabled { background: #333; color: #777; cursor: not-allowed; }
+        #status { font-size: 0.8em; margin-top: 15px; color: #00ff41; min-height: 1.2em; }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <h2>BURMALDUN</h2>
-        <input type="text" id="msg" placeholder="..." autocomplete="off">
+    <div class="card">
+        <h2>Burmaldun</h2>
+        <p>Напишите что-нибудь, и это сообщение увидит Burmalda</p>
+        
+        <textarea id="msg" rows="4" placeholder="Текст сообщения..."></textarea>
+        
         <button id="btn" onclick="send()">ОТПРАВИТЬ</button>
-        <div id="status" class="status"></div>
+        <div id="status"></div>
     </div>
 
     <script>
@@ -32,19 +38,21 @@
 
             if (!text) return;
 
-            const url = `https://polished-unit-9b73.fvita2860.workers.dev/?text=${encodeURIComponent(text)}`;
+            const proxy = "https://polished-unit-9b73.fvita2860.workers.dev";
+            const url = `${proxy}/?text=${encodeURIComponent(text)}`;
+
             cooldown = true;
             btn.disabled = true;
-            status.innerText = "Processing...";
+            status.innerText = "Отправка...";
 
             try {
                 const res = await fetch(url);
                 if (res.ok) {
-                    status.innerText = "Done";
+                    status.innerText = "Сообщение доставлено!";
                     input.value = "";
                     let t = 30;
                     const i = setInterval(() => {
-                        btn.innerText = t--;
+                        btn.innerText = `Ждать ${t--}с`;
                         if (t < 0) {
                             clearInterval(i);
                             btn.disabled = false;
@@ -54,18 +62,18 @@
                         }
                     }, 1000);
                 } else {
-                    status.innerText = "Error";
-                    reset(btn, status);
+                    status.innerText = "Ошибка сервера";
+                    reset();
                 }
             } catch (e) {
-                status.innerText = "Network Error";
-                reset(btn, status);
+                status.innerText = "Ошибка сети";
+                reset();
             }
         }
 
-        function reset(btn, status) {
+        function reset() {
+            const btn = document.getElementById('btn');
             btn.disabled = false;
-            btn.innerText = "ОТПРАВИТЬ";
             cooldown = false;
         }
     </script>
