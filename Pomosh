@@ -1,0 +1,93 @@
+Не буду много воды лить прост делайте:
+
+Шаг 1: Подготовка в Telegram
+Создай бота в @BotFather, получи API Token.
+Узнай свой ID через бота @userinfobot.
+
+Шаг 3: Скрытый шлюз (Cloudflare Workers) ПЕРЕХОДИМ СНАЧАЛА К ГИТХАБУ
+
+Сначала регистрация через GitHub, там всё подтверждаем, дальше заходим на dash.cloudflare.com и, как инструкция снизу, делаем. НЕ ЗАБЫВАЕМ ЗАМЕНИТЬ TOKEN и CHAT ID. 
+Workers & Pages → Create → Start with Hello World.
+Нажми Deploy, затем Edit Code.
+
+Удали всё и вставь этот код:
+
+
+JavaScript
+export default {
+  async fetch(request) {
+    const TOKEN = "ТВОЙ_ТОКЕН_БОТА";
+    const CHAT_ID = "ТВОЙ_ID";
+    const url = new URL(request.url);
+    const text = url.searchParams.get("text");
+
+    if (!text) return new Response("Error: No text", { status: 400 });
+
+    const tgUrl = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}`;
+
+    return fetch(tgUrl, { headers: { "Access-Control-Allow-Origin": "*" } });
+  }
+};
+
+
+Нажми Save and Deploy. Скопируй ссылку (например: https://...workers.dev).
+
+Шаг 2: Сайт (GitHub Pages)
+Зарегистрируйся github.com 
+Ну тут объяснений не надо.
+
+Создай репозиторий на GitHub.
+Нажимай на свою иконку.
+Дальше — репозиторий.
+Дальше — название XXX.github.i,
+где XXX — любые слова, буквы без разницы как у меня к примеру burmaldun.github.io.
+После вылазит окошко, нажимай Create a codespace -> Create new codespace -> в поиск строчку github.com и опять заходит в свой репозиторий.
+Будет только README.md, если увидел это — ты молодец, дальше Add File -> Create new file, замегает Name your file, подписывай index.html, копируй код снизу, дальше зеленая кнопка, дальше опять зеленая кнопка.
+ВСЁ, у нас теперь есть рабочий код.
+И не забываем заменить строчку const worker = "https://ТВОЙ_ВОРКЕР.workers.dev"; где https://ТВОЙ_ВОРКЕР.workers.dev.
+
+HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anon Chat</title>
+    <style>
+        body { background: #000; color: #00ff41; font-family: monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { border: 1px solid #00ff41; padding: 25px; text-align: center; width: 300px; }
+        textarea { background: #000; border: 1px solid #00ff41; color: #00ff41; width: 90%; padding: 10px; margin-bottom: 10px; outline: none; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>MESSAGE</h2>
+        <textarea id="t" rows="5" placeholder="..."></textarea>
+        <button onclick="send()" id="b">SEND</button>
+    </div>
+    <script>
+        async function send() {
+            const val = document.getElementById('t').value;
+            const btn = document.getElementById('b');
+            if(!val) return;
+            
+            btn.disabled = true;
+            // ВСТАВЬ СВОЮ ССЫЛКУ ИЗ CLOUDFLARE НИЖЕ
+            const worker = "https://ТВОЙ_ВОРКЕР.workers.dev"; 
+            
+            try {
+                await fetch(`${worker}/?text=${encodeURIComponent(val)}`);
+                document.getElementById('t').value = "";
+                alert("Sent!");
+            } catch {
+                alert("Error!");
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
+
+
+На этом всё!!!! Чтобы проверить работу сайта, нажимаем в своём репозитории Actions и ждем, пока загорится зеленым, нажимаем, и вылазит deploy, и там ссылка на наш сайт.
