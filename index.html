@@ -7,7 +7,7 @@
     <style>
         body { background: #000; color: #00ff41; font-family: monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
         .terminal { border: 2px solid #00ff41; padding: 25px; box-shadow: 0 0 20px #00ff41; width: 300px; text-align: center; }
-        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 85%; margin: 15px 0; outline: none; }
+        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 12px; width: 85%; margin: 15px 0; outline: none; }
         button { background: #00ff41; color: #000; border: none; padding: 12px; width: 94%; cursor: pointer; font-weight: bold; }
         button:disabled { background: #222; color: #555; }
         .status { font-size: 0.8em; margin-top: 15px; color: #008f11; }
@@ -15,10 +15,10 @@
 </head>
 <body>
     <div class="terminal">
-        <h2>BURMALDUN SYSTEM</h2>
-        <input type="text" id="msg" placeholder="Введите сообщение..." autocomplete="off">
-        <button id="btn" onclick="send()">ОТПРАВИТЬ (PROXIED)</button>
-        <div id="status" class="status">> Ready...</div>
+        <h2>BURMALDUN</h2>
+        <input type="text" id="msg" placeholder="Введите данные..." autocomplete="off">
+        <button id="btn" onclick="send()">ОТПРАВИТЬ</button>
+        <div id="status" class="status">> System Ready...</div>
     </div>
 
     <script>
@@ -26,38 +26,38 @@
 
         async function send() {
             if (cooldown) return;
-
             const input = document.getElementById('msg');
             const btn = document.getElementById('btn');
             const status = document.getElementById('status');
-            
             const text = input.value.trim();
-            if (!text) { status.innerText = "> Ошибка: Пусто!"; return; }
 
-            // Твои данные из прошлых попыток
+            if (!text) { status.innerText = "> Введите текст!"; return; }
+
+            // Твои данные из конфига
             const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE";
             const chat_id = "6849614809";
 
-            // ИСПОЛЬЗУЕМ РАБОЧИЙ HTTP ПРОКСИ ДЛЯ TG
-            // Вместо api.telegram.org используем шлюз, который не заблочен
-            const proxyUrl = `https://tgproxy.p7.re/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+            // Твоя ссылка на Worker из Cloudflare
+            const proxy = "https://rapid-bush-aae2.fvita2860.workers.dev"; 
+
+            const url = `${proxy}/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
 
             cooldown = true;
             btn.disabled = true;
-            status.innerText = "> Маршрутизация через прокси...";
+            status.innerText = "> Отправка через личный прокси...";
 
             try {
-                const response = await fetch(proxyUrl);
-                if (response.ok) {
+                const res = await fetch(url);
+                if (res.ok) {
                     status.innerText = "> Успешно доставлено!";
                     input.value = "";
                     startTimer(btn, status);
                 } else {
-                    status.innerText = "> Ошибка прокси. Попробуй позже.";
+                    status.innerText = "> Ошибка прокси. Проверь код Worker.";
                     reset(btn, status);
                 }
             } catch (e) {
-                status.innerText = "> Ошибка сети. Даже прокси заблочен.";
+                status.innerText = "> Ошибка сети.";
                 reset(btn, status);
             }
         }
@@ -72,9 +72,9 @@
 
         function reset(btn, status) {
             btn.disabled = false;
-            btn.innerText = "ОТПРАВИТЬ (PROXIED)";
+            btn.innerText = "ОТПРАВИТЬ";
             cooldown = false;
-            if (!status.innerText.includes("Ошибка")) status.innerText = "> Ready...";
+            if (!status.innerText.includes("Ошибка")) status.innerText = "> System: Online";
         }
     </script>
 </body>
