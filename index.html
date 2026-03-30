@@ -5,86 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Burmaldun | Terminal</title>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .terminal { background: rgba(0, 20, 0, 0.9); border: 1px solid #00ff41; padding: 30px; box-shadow: 0 0 20px #00ff41; text-align: center; width: 320px; }
-        h1 { font-size: 1.8em; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 20px; }
-        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 90%; margin-bottom: 15px; outline: none; font-family: monospace; }
-        button { background: #00ff41; color: #000; border: none; padding: 12px 20px; cursor: pointer; font-weight: bold; width: 100%; text-transform: uppercase; transition: 0.3s; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        .logs { font-size: 0.8em; color: #888; margin-top: 15px; text-align: left; min-height: 20px; }
+        body { background: #000; color: #00ff41; font-family: monospace; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .terminal { border: 2px solid #00ff41; padding: 25px; box-shadow: 0 0 20px #00ff41; width: 300px; text-align: center; }
+        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 85%; margin: 15px 0; outline: none; }
+        button { background: #00ff41; color: #000; border: none; padding: 12px; width: 94%; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #222; color: #555; }
+        .status { font-size: 0.8em; margin-top: 15px; color: #008f11; }
     </style>
 </head>
 <body>
     <div class="terminal">
-        <h1>BURMALDUN</h1>
-        <input type="text" id="user_msg" placeholder="Введите сообщение..." autocomplete="off">
-        <button id="send_btn" onclick="sendToTG()">Отправить</button>
-        <div class="logs" id="log_box">> System ready...</div>
+        <h2>BURMALDUN SYSTEM</h2>
+        <input type="text" id="msg" placeholder="Введите сообщение..." autocomplete="off">
+        <button id="btn" onclick="send()">ОТПРАВИТЬ (PROXIED)</button>
+        <div id="status" class="status">> Ready...</div>
     </div>
 
     <script>
-        let cooldownActive = false;
+        let cooldown = false;
 
-        async function sendToTG() {
-            const btn = document.getElementById('send_btn');
-            const logBox = document.getElementById('log_box');
-            const userInput = document.getElementById('user_msg');
+        async function send() {
+            if (cooldown) return;
+
+            const input = document.getElementById('msg');
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
             
-            if (cooldownActive) return;
+            const text = input.value.trim();
+            if (!text) { status.innerText = "> Ошибка: Пусто!"; return; }
 
-            const text = userInput.value.trim();
-            if (!text) {
-                logBox.innerText = "> Ошибка: Пустое поле!";
-                return;
-            }
+            // Твои данные из прошлых попыток
+            const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE";
+            const chat_id = "6849614809";
 
-            const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE"; 
-            const chat_id = "6849614809"; 
-            
-            // Блокировка
-            cooldownActive = true;
+            // ИСПОЛЬЗУЕМ РАБОЧИЙ HTTP ПРОКСИ ДЛЯ TG
+            // Вместо api.telegram.org используем шлюз, который не заблочен
+            const proxyUrl = `https://tgproxy.p7.re/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+
+            cooldown = true;
             btn.disabled = true;
-            logBox.innerText = "> Отправка данных...";
-
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+            status.innerText = "> Маршрутизация через прокси...";
 
             try {
-                const response = await fetch(url);
+                const response = await fetch(proxyUrl);
                 if (response.ok) {
-                    logBox.innerText = "> Успешно! КД 30 сек...";
-                    userInput.value = "";
-                    startTimer(btn, logBox);
+                    status.innerText = "> Успешно доставлено!";
+                    input.value = "";
+                    startTimer(btn, status);
                 } else {
-                    logBox.innerText = "> Ошибка API Telegram.";
-                    resetBtn(btn, logBox);
+                    status.innerText = "> Ошибка прокси. Попробуй позже.";
+                    reset(btn, status);
                 }
             } catch (e) {
-                logBox.innerText = "> Ошибка сети.";
-                resetBtn(btn, logBox);
+                status.innerText = "> Ошибка сети. Даже прокси заблочен.";
+                reset(btn, status);
             }
         }
 
-        function startTimer(btn, logBox) {
-            let timeLeft = 30;
-            const timer = setInterval(() => {
-                timeLeft--;
-                btn.innerText = `ЖДАТЬ ${timeLeft}с`;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    resetBtn(btn, logBox);
-                }
+        function startTimer(btn, status) {
+            let t = 30;
+            const i = setInterval(() => {
+                btn.innerText = `ЖДАТЬ ${--t}с`;
+                if (t <= 0) { clearInterval(i); reset(btn, status); }
             }, 1000);
         }
 
-        function resetBtn(btn, logBox) {
+        function reset(btn, status) {
             btn.disabled = false;
-            btn.innerText = "Отправить";
-            cooldownActive = false;
-            logBox.innerText = "> System ready...";
+            btn.innerText = "ОТПРАВИТЬ (PROXIED)";
+            cooldown = false;
+            if (!status.innerText.includes("Ошибка")) status.innerText = "> Ready...";
         }
-
-        // Сброс при загрузке
-        window.onload = () => resetBtn(document.getElementById('send_btn'), document.getElementById('log_box'));
     </script>
 </body>
 </html>
