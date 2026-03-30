@@ -2,51 +2,53 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burmaldun Project</title>
+    <title>Burmaldun | Terminal</title>
     <style>
-        body { 
-            background-color: #050505; 
-            color: #00ff41; 
-            font-family: 'Courier New', Courier, monospace; 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .container { 
-            border: 1px solid #00ff41; 
-            padding: 30px; 
-            box-shadow: 0 0 15px #00ff41;
-            text-align: center;
-        }
-        .counter {
-            font-size: 1.2em;
-            margin-top: 20px;
-            color: #ffffff;
-        }
-        h1 { text-transform: uppercase; letter-spacing: 5px; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .terminal { background: rgba(0, 20, 0, 0.9); border: 1px solid #00ff41; padding: 30px; box-shadow: 0 0 20px #00ff41; text-align: center; width: 350px; }
+        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 80%; margin-bottom: 10px; outline: none; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        .logs { font-size: 0.8em; color: #888; margin-top: 15px; text-align: left; height: 50px; overflow: hidden; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Система Burmaldun</h1>
-        <p>Статус: [ONLINE]</p>
-        <div class="counter">Просмотров: <span id="count">...</span></div>
+    <div class="terminal">
+        <h1>BURMALDUN</h1>
+        <p>ВВЕДИТЕ СООБЩЕНИЕ:</p>
+        
+        <input type="text" id="user_msg" placeholder="Сообщение..." autocomplete="off">
+        <br>
+        <button onclick="sendToTG()">ОТПРАВИТЬ</button>
+
+        <div class="logs" id="log_box">> System ready...</div>
     </div>
 
     <script>
-        // Простой локальный счётчик для примера
-        let views = localStorage.getItem('page_views');
-        if (!views) {
-            views = 1;
-        } else {
-            views = parseInt(views) + 1;
+        async function sendToTG() {
+            const token = "8202292177:AAHK2CR4lp5wbEeMRU1otQdEXr81smOOTdE"; // Твой токен
+            const chat_id = "6849614809"; // Твой ID
+            const text = document.getElementById('user_msg').value;
+            const logBox = document.getElementById('log_box');
+
+            if (!text) return;
+
+            logBox.innerText = "> Sending data...";
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(text)}`;
+
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    logBox.innerText = "> Сообщение доставлено!";
+                    document.getElementById('user_msg').value = "";
+                } else {
+                    logBox.innerText = "> Ошибка сервера.";
+                }
+            } catch (e) {
+                logBox.innerText = "> Ошибка сети.";
+            }
         }
-        localStorage.setItem('page_views', views);
-        document.getElementById('count').innerHTML = views;
     </script>
 </body>
 </html>
